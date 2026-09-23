@@ -151,3 +151,146 @@ test("production requires a configured origin", async (t) => {
   const send = await fixture(t, { env: { NODE_ENV: "production" } });
   assert.equal((await send()).status, 403);
 });
+
+// Emulate Vercel's parsed request object without opening a listener or sending mail.
+async function invoke(
+  handler,
+  { body = message(), headers = {}, method = "POST" } = {},
+) {
+  const req = {
+    method,
+    headers: {
+      origin: env.CONTACT_ALLOWED_ORIGIN,
+      "content-type": "application/json",
+      ...headers,
+    },
+    body,
+    socket: { remoteAddress: "127.0.0.1" },
+  };
+  const result = { headers: {} };
+  const res = {
+    setHeader(key, value) {
+      result.headers[key] = value;
+    },
+    writeHead(status, headers) {
+      result.status = status;
+      Object.assign(result.headers, headers);
+    },
+    end(body) {
+      result.body = JSON.parse(body);
+    },
+  };
+  await handler(req, res);
+  return result;
+}
+function vercelHandler(options = {}) {
+  return createContactHandler({
+    env: { ...env, NODE_ENV: "production" },
+    vercel: true,
+    fetchImpl: async () => Response.json({ id: "accepted" }),
+    ...options,
+  });
+}
+test("Vercel parsed JSON, string and Buffer bodies reuse the email handler", async () => {
+  for (const body of [
+    message(),
+    JSON.stringify(message()),
+    Buffer.from(JSON.stringify(message())),
+  ]) {
+    const result = await invoke(vercelHandler(), { body });
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.body, { ok: true });
+  }
+});
+test("Vercel rejects oversized/invalid parsed bodies and missing or wrong origins", async () => {
+  for (const body of [
+    { ...message(), extra: "x".repeat(17000) },
+    "x".repeat(17000),
+  ])
+    assert.equal((await invoke(vercelHandler(), { body })).status, 413);
+  for (const body of [
+    null,
+    [],
+    "{invalid",
+    { ...message(), email: "invalid" },
+    { ...message(), website: "bot" },
+  ])
+    assert.equal((await invoke(vercelHandler(), { body })).status, 400);
+  for (const origin of [
+    undefined,
+    "null",
+    "http://localhost:5173",
+    "https://attacker.example",
+    env.CONTACT_ALLOWED_ORIGIN + ".evil.example",
+  ])
+    assert.equal(
+      (await invoke(vercelHandler(), { headers: { origin } })).status,
+      403,
+    );
+});
+test("Vercel limiter separates visitors using the platform client IP", async () => {
+  const handler = vercelHandler();
+  const headers = { "x-forwarded-for": "203.0.113.1" };
+  for (let i = 0; i < 5; i++)
+    assert.equal((await invoke(handler, { headers })).status, 200);
+  assert.equal((await invoke(handler, { headers })).status, 429);
+  assert.equal(
+    (await invoke(handler, { headers: { "x-forwarded-for": "203.0.113.2" } }))
+      .status,
+    200,
+  );
+});
+test("local handler ignores spoofed forwarded IPs", async () => {
+  const handler = vercelHandler({ vercel: false });
+  for (let i = 1; i <= 5; i++)
+    assert.equal(
+      (
+        await invoke(handler, {
+          headers: { "x-forwarded-for": `203.0.113.${i}` },
+        })
+      ).status,
+      200,
+    );
+  assert.equal(
+    (await invoke(handler, { headers: { "x-forwarded-for": "203.0.113.99" } }))
+      .status,
+    429,
+  );
+});
+test("Vercel entry point exports a request handler and rejects GET", async () => {
+  const { default: handler } = await import("../api/contact.js");
+  assert.equal(typeof handler, "function");
+  const result = await invoke(handler, { method: "GET" });
+  assert.equal(result.status, 405);
+  assert.equal(result.headers.Allow, "POST");
+});
+test("Vercel SPA fallback covers deep links and excludes API/assets/PDF", async () => {
+  const { readFileSync } = await import("node:fs");
+  const config = JSON.parse(
+    readFileSync(new URL("../vercel.json", import.meta.url), "utf8"),
+  );
+  const fallback = new RegExp(`^${config.rewrites[0].source}$`);
+  for (const path of [
+    "/",
+    "/about",
+    "/contact",
+    "/ai-engineering",
+    "/projects/possbo",
+    "/projects/family-cart",
+    "/resume",
+    "/experience",
+    "/unknown",
+  ])
+    assert.ok(fallback.test(path), path);
+  for (const path of [
+    "/api",
+    "/api/contact",
+    "/api/missing",
+    "/assets/index-test.js",
+    "/assets/index.css",
+    "/images/possbo/create.webp",
+    "/Dvir_Haham_Pour_Resume.pdf",
+    "/robots.txt",
+  ])
+    assert.ok(!fallback.test(path), path);
+});

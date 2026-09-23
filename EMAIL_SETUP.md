@@ -1,41 +1,65 @@
-﻿# Email delivery setup
+﻿# Contact email on Vercel
 
-The contact form posts JSON to the same-origin `/api/contact` endpoint. The Node handler sends a plain-text message through Resend's HTTPS API, with the visitor's address as `reply_to` and a server-configured recipient. Provider acceptance triggers inline success and a form reset; errors preserve the form for retry. No mail app, redirect, or separate success page is involved. The direct Email link is still available.
+The Vite frontend remains a static build in `dist`. Vercel serves `api/contact.js` as a Node function at **POST /api/contact**. The function imports `server/contact.mjs`; it never imports `server/start.mjs`, creates an HTTP server, or calls `listen()`.
 
-## Required configuration
+The existing ContactForm is unchanged: asynchronous submission, inline success/error, reset only on success, retained inputs on failure, and no navigation or mailto submission. The direct Email link remains available.
 
-1. Create a Resend account and verify a sender domain you control. See [domain verification](https://resend.com/docs/dashboard/domains/introduction).
-2. Create a sending API key. Follow the [send-email API documentation](https://resend.com/docs/api-reference/emails/send-email).
-3. Locally, copy `.env.example` to `.env.local` in the project root and fill the values below. On a future Node hosting service, use its **server environment / secrets settings** instead. Never use `VITE_` prefixes or put secrets in client source.
+## Before clicking Deploy
+
+1. Import the project root into Vercel. Use **Vite**, build command **npm run build**, output directory **dist**, and **Node.js 22.x**. Leave installation at the default. Do not configure `npm start` or any persistent server command.
+2. In **Project Settings → Environment Variables**, configure the following for **Production**. Do not use `VITE_` prefixes and do not upload `.env.local`.
 
 | Variable | Value |
 | --- | --- |
-| `RESEND_API_KEY` | Your Resend sending API key (secret). |
-| `CONTACT_FROM_EMAIL` | Bare sender address on the verified domain, e.g. `portfolio@your-domain.example`. |
-| `CONTACT_TO_EMAIL` | Recipient; defaults to `dvir.hahampour@gmail.com`. |
-| `CONTACT_ALLOWED_ORIGIN` | Exact browser origin, including scheme and port, without a trailing slash. For `npm start` locally: `http://127.0.0.1:3000`. For development, use Vite's printed origin. Production must use the final HTTPS origin. |
-| `PORT` | Node listening port; default `3000`. |
-| `HOST` | Bind address; default `127.0.0.1`. Use `0.0.0.0` if required by the host/container. |
+| `RESEND_API_KEY` | Your Resend sending API key; secret, server-side only. |
+| `CONTACT_FROM_EMAIL` | Bare sender email on your verified Resend domain, such as `portfolio@your-domain.com`. |
+| `CONTACT_TO_EMAIL` | `dvir.hahampour@gmail.com`, or your desired inbox. |
+| `CONTACT_ALLOWED_ORIGIN` | **Required in production:** the exact public browser origin, e.g. `https://your-project.vercel.app`. |
 
-Restart after changing environment values. Node 22.16+ is supported.
+No `PORT` or `HOST` is needed on Vercel. Do not copy the localhost origin from the local environment to Vercel.
+
+### Exact origin format
+
+Use **scheme + hostname + optional non-default port**, without a trailing slash, path, query, or wildcard. For a Vercel production URL of `https://dvir-portfolio-example.vercel.app`, enter exactly:
+
+```env
+CONTACT_ALLOWED_ORIGIN=https://dvir-portfolio-example.vercel.app
+```
+
+This is an example, not an assumed project URL. If Vercel only confirms the URL after the first deployment, add/update this variable then **redeploy**. Until configured, the site loads but contact requests fail closed with an inline error. For a custom domain, use its exact HTTPS origin instead. Only that one origin can submit. A preview deployment has a different origin: set a Preview-scoped value for its URL and redeploy if you want email testing there; the Production origin does not automatically authorize previews.
+
+3. Verify the sender domain in Resend. `onboarding@resend.dev` is for testing and only sends to the Resend account owner's email. Use a verified domain for the public site.
+4. After deployment, submit a test message from the actual site, confirm inbox delivery and Reply-To, and refresh `/projects/possbo` and `/ai-engineering`. Also check the resume PDF. Deployment and live email sending were not performed during this migration.
+
+## Runtime and routing
+
+`api/contact.js` exports the shared handler at module scope. It supports Vercel's parsed JSON body as well as raw Node request streams used locally. Vercel bundles the imported server module. No Resend SDK or new runtime dependency is needed.
+
+`vercel.json` selects Vite, gives the contact function 30 seconds (the provider request times out after 12 seconds), and rewrites extensionless frontend paths to `/index.html`. `/api` paths and file paths are excluded, so API requests, built assets, product images, and the original resume PDF retain their own handling. Unknown extensionless frontend URLs reach React Router's 404 page; missing assets/API paths are not rewritten to HTML.
+
+The frontend still calls the relative same-origin URL `/api/contact`. API keys are only read in server code; nothing is injected into the Vite client build.
+
+## Validation and abuse protection
+
+Preserved: field validation, fixed recipient, plain-text email, header-injection checks, exact Origin checks, honeypot, 16 KiB body validation, provider timeouts, and retry idempotency. Errors do not expose provider messages or secrets. A successful response means provider acceptance, not a guarantee of inbox delivery.
+
+The limiter allows five attempts per client IP per 15 minutes **per warm function instance**. On Vercel, it uses the platform's overwritten `x-forwarded-for` header; the local server does not trust forwarded headers. The in-memory counter resets on cold starts and is not shared across instances. It is best-effort spam protection, not a global quota. Stronger cross-instance limits would require edge rules or a shared store; no additional paid service was introduced.
+
+## Local development
+
+Copy `.env.example` to `.env.local` if needed, preserving any existing key. Set the local `CONTACT_ALLOWED_ORIGIN` to the exact origin printed by `npm run dev`. Vite middleware continues serving the same contact endpoint. With no explicit origin, local development accepts only matching localhost/127.0.0.1 origins.
+
+`npm run build` then `npm start` remains available for optional local testing of the old standalone server; it is **not** Vercel's deployment path. Its `PORT`/`HOST` settings are local-only. Restart local processes after changing environment values.
+
+## Validation commands
 
 ```sh
 npm run build
-npm start
+npm run lint
+npm run test:server
+npm run test:content
 ```
 
-For development, `npm run dev` provides the same endpoint through Vite middleware. Unconfigured local development accepts matching localhost origins only. Production always requires `CONTACT_ALLOWED_ORIGIN`.
+Contact tests mock provider responses; they send no real email. Tests cover raw and Vercel-parsed bodies, errors, origin restrictions, IP separation, rate limiting, the exported function, and the SPA rewrite boundaries. A live Vercel deployment is still needed to verify platform routing and real delivery end-to-end.
 
-## Hosting and verification
-
-The included Node server serves the built site, assets, PDF, client-side routes, and contact API. Use a Node-capable host with HTTPS; a static-only deployment such as GitHub Pages cannot execute this endpoint. Nothing has been deployed. The supplied server expects the application at the domain root.
-
-After configuring credentials, send one real message through the UI, confirm it appears in the recipient inbox, and reply to confirm Reply-To. API success means Resend accepted the message; inbox arrival still depends on provider delivery and domain configuration. No live email was sent during implementation because credentials were unavailable.
-
-## Validation and abuse controls
-
-Server-side validation, plain-text email, fixed recipient, origin checking, a hidden honeypot, a 16 KiB request limit, timeouts, and five attempts per socket IP per 15 minutes. API secrets and provider errors are never returned to the browser. Retry of unchanged content uses the same Resend idempotency key to reduce duplicate messages after uncertain responses. Inputs are disabled during submission and retained on failure.
-
-The in-memory limiter is appropriate for a small single-process portfolio: it resets on restart and is not shared between replicas. Forwarded IP headers are intentionally not trusted; behind a reverse proxy, requests may share its quota. Configure trusted edge rate limiting for a public deployment rather than trusting arbitrary visitor-supplied headers. This is basic spam resistance, not bot-proof authentication.
-
-`npm run test:server` exercises provider behavior using mocks only; it sends no email.
+References: [Vercel Node functions](https://vercel.com/docs/functions/runtimes/node-js), [Vite SPA routing](https://vercel.com/docs/frameworks/frontend/vite), [Vercel request headers](https://vercel.com/docs/headers/request-headers), [Resend domain setup](https://resend.com/docs/dashboard/domains/introduction).

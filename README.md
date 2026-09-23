@@ -26,7 +26,9 @@ npm run preview
 - `src/data/resume.ts`: concise web resume based on the supplied CV, with the owner’s corrected NGSOFT employment period (Dec 2025 — Aug 2026).
 - `src/pages/AIEngineering.tsx`: practical workflow, tools, agent context, principles, and Possbo cross-link.
 - `src/data/aiEngineering.ts`: hands-on AI systems learning content.
-- `server/contact.mjs`: validated server-side Resend email endpoint.
+- `server/contact.mjs`: shared validated server-side Resend email handler.
+- `api/contact.js`: Vercel serverless entry point.
+- `vercel.json`: Vite deployment and SPA routing configuration.
 - `EMAIL_SETUP.md`: exact email configuration and hosting instructions.
 - `CONTENT_REVIEW.md`: all 14 public repositories reviewed, selection rationale, and source limitations.
 
@@ -49,7 +51,11 @@ Old `/projects/ai-development-workflow` and `/projects/distributed-backend-syste
 
 ## Hosting
 
-Nothing has been deployed. `npm run build` then `npm start` runs the included Node server, which serves the built SPA, assets, PDF, and email API at the domain root. Configure the hosting environment as described in [EMAIL_SETUP.md](EMAIL_SETUP.md). Static-only hosting cannot run the email endpoint. Production domain and Open Graph image metadata can be added once chosen.
+Vercel serves the unchanged Vite build from `dist` and runs `api/contact.js` as a serverless Node function. `vercel.json` provides the React Router deep-link fallback while excluding API and file paths. Vercel does not execute `server/start.mjs` or `npm start`.
+
+Use the Vite preset, `npm run build`, `dist`, and Node.js 22.x. Configure `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL`, and the required `CONTACT_ALLOWED_ORIGIN` in Vercel's Production environment settings. No `PORT` or `HOST` is required. See [EMAIL_SETUP.md](EMAIL_SETUP.md) for the exact origin format, sender verification, and preview-deployment behavior. Nothing has been deployed.
+
+`npm start` remains an optional standalone local server, separate from Vercel deployment.
 
 ## English / Hebrew
 

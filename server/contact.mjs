@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isIP } from "node:net";
 
 const emailPattern = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 export function createContactHandler({
@@ -6,6 +7,7 @@ export function createContactHandler({
   fetchImpl = fetch,
   now = Date.now,
   timeoutMs = 12000,
+  vercel = false,
 } = {}) {
   const attempts = new Map();
   return async function contact(req, res) {
@@ -36,7 +38,12 @@ export function createContactHandler({
       return reply(403, { error: "origin" });
     if (!req.headers["content-type"]?.startsWith("application/json"))
       return reply(415, { error: "content_type" });
-    const ip = req.socket.remoteAddress ?? "unknown";
+    // Only trust this header at the Vercel entry point: Vercel overwrites it.
+    const forwarded = vercel ? req.headers["x-forwarded-for"] : undefined;
+    const clientIp = typeof forwarded === "string" ? forwarded.trim() : "";
+    const ip = isIP(clientIp)
+      ? clientIp
+      : (req.socket?.remoteAddress ?? "unknown");
     const time = now();
     for (const [key, value] of attempts)
       if (time - value.start >= 900000) attempts.delete(key);
@@ -49,14 +56,27 @@ export function createContactHandler({
     attempts.set(ip, entry);
     let data;
     try {
-      const chunks = [];
-      let size = 0;
-      for await (const chunk of req) {
-        size += chunk.length;
-        chunks.push(chunk);
-        if (size > 16384) return reply(413, { error: "size" });
+      // Vercel parses JSON before calling the function; Vite/local HTTP use a stream.
+      if (req.body !== undefined) {
+        const body = Buffer.isBuffer(req.body)
+          ? req.body.toString("utf8")
+          : typeof req.body === "string"
+            ? req.body
+            : JSON.stringify(req.body);
+        if (Buffer.byteLength(body) > 16384)
+          return reply(413, { error: "size" });
+        data = JSON.parse(body);
+      } else {
+        const chunks = [];
+        let size = 0;
+        for await (const chunk of req) {
+          const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+          size += bytes.length;
+          if (size > 16384) return reply(413, { error: "size" });
+          chunks.push(bytes);
+        }
+        data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
       }
-      data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
     } catch {
       return reply(400, { error: "invalid" });
     }
@@ -74,7 +94,9 @@ export function createContactHandler({
         typeof data[key] !== "string" ||
         data[key].length > max ||
         (key !== "company" && !data[key].trim()) ||
-        (key !== "message" && (/[\r\n]/.test(data[key]) || data[key].includes(String.fromCharCode(0))))
+        (key !== "message" &&
+          (/[\r\n]/.test(data[key]) ||
+            data[key].includes(String.fromCharCode(0))))
       )
         return reply(400, { error: "invalid" });
       values[key] = data[key].trim();
