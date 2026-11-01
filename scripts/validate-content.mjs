@@ -71,8 +71,9 @@ function checkTranslations(value, field = "") {
 }
 checkTranslations(projects);
 const { resume } = load("src/data/resume.ts");
-assert.equal(resume.experience.dates, "Dec 2025 – Sep 2026");
-assert.ok(he[resume.experience.dates]);
+assert.equal(resume.experience.dates, "Sep 2025 – Sep 2026");
+assert.equal(en[resume.experience.dates], "Sep 2025 – Sep 2026");
+assert.equal(he[resume.experience.dates], "ספטמבר 2025 – ספטמבר 2026");
 assert.equal(resume.projects[0].title, "Possbo");
 assert.equal(resume.projects[0].stage, "Pre-production");
 checkTranslations(resume.projects);

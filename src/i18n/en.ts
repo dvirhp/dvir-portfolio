@@ -82,7 +82,7 @@ export const en: Record<string, string> = {
   "A practical toolkit for backend engineering, distributed systems, cloud-native architecture, and AI-assisted development.": "A practical toolkit for backend engineering, distributed systems, cloud-native architecture, and AI-assisted development.",
   "03 / EXPERIENCE": "03 / EXPERIENCE",
   "Built in practice.": "Built in practice.",
-  "Dec 2025 – Sep 2026": "Dec 2025 – Sep 2026",
+  "Sep 2025 – Sep 2026": "Sep 2025 – Sep 2026",
   "at NGSOFT": "at NGSOFT",
   "Backend services, reliable synchronization, and cloud-native delivery.": "Backend services, reliable synchronization, and cloud-native delivery.",
   "Explore experience": "Explore experience",

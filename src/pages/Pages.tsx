@@ -184,7 +184,7 @@ export function Home() {
           <h2>{tr("Built in practice.")}</h2>
         </div>
         <div>
-          <span className="mono muted">{tr("Dec 2025 – Sep 2026")}</span>
+          <span className="mono muted">{tr("Sep 2025 – Sep 2026")}</span>
           <h3>
             {tr("Software Engineer")}
             <span className="muted">{tr("at NGSOFT")}</span>
@@ -363,7 +363,7 @@ export function Experience() {
       </PageIntro>
       <section className="experience-layout section">
         <aside>
-          <p className="eyebrow">{tr("Dec 2025 – Sep 2026")}</p>
+          <p className="eyebrow">{tr("Sep 2025 – Sep 2026")}</p>
           <h2>{tr("NGSOFT")}</h2>
           <p>{tr("Software Engineer")}</p>
           <div className="tags">

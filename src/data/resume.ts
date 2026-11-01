@@ -25,7 +25,7 @@ export const resume = {
   experience: {
     company: "NGSOFT",
     title: "Software Engineer",
-    dates: "Dec 2025 – Sep 2026",
+    dates: "Sep 2025 – Sep 2026",
     items: [
       "Built end-to-end NestJS systems with PostgreSQL, REST APIs, Socket.IO, and Angular.",
       "Designed shared TypeScript foundations and incremental synchronization with retries.",

@@ -82,7 +82,7 @@ export const he: Record<string, string> = {
   "A practical toolkit for backend engineering, distributed systems, cloud-native architecture, and AI-assisted development.": "ארגז כלים מעשי לפיתוח Backend, מערכות מבוזרות, ארכיטקטורה בענן ופיתוח בסיוע AI.",
   "03 / EXPERIENCE": "03 / ניסיון מקצועי",
   "Built in practice.": "ניסיון מהשטח.",
-  "Dec 2025 – Sep 2026": "דצמבר 2025 – ספטמבר 2026",
+  "Sep 2025 – Sep 2026": "ספטמבר 2025 – ספטמבר 2026",
   "at NGSOFT": "ב־NGSOFT",
   "Backend services, reliable synchronization, and cloud-native delivery.": "שירותי Backend, סנכרון אמין ותהליכי פריסה לענן.",
   "Explore experience": "לניסיון המקצועי",

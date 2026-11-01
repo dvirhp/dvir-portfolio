@@ -31,7 +31,7 @@ The previous distributed-backend case study and AI-workflow project are represen
 
 The supplied PDF was copied byte-for-byte to `public/Dvir_Haham_Pour_Resume.pdf`.
 SHA-256: `0830044AD09424DA1DD508E493F388E324A0E189BD35F671C1516460F030ED61`.
-`src/data/resume.ts` summarizes the supplied PDF, with the owner’s explicit date correction to **Dec 2025 — Aug 2026**. Home, Experience, and Resume use the corrected period; the original PDF remains byte-for-byte unchanged. The brief public military-service entry is taken from the CV and contains no additional detail.
+`src/data/resume.ts` summarizes the supplied PDF, with the owner’s explicit date correction to **Sep 2025 – Sep 2026**. Home, Experience, and Resume use the corrected period; the original PDF remains byte-for-byte unchanged. The brief public military-service entry is taken from the CV and contains no additional detail.
 
 ## Public screenshot provenance
 

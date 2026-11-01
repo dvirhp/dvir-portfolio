@@ -7,7 +7,7 @@ Completed locally on 2026-09-22. Existing typography, dark palette, spacing, car
 - Kept **Software Engineer | Backend & AI** and the existing homepage headline.
 - Changed the code card to **Cloud-native applications** and aligned its accessible description.
 - About now emphasizes reliable backend/cloud-native systems, building product capabilities, and integrating assisted development throughout the lifecycle.
-- NGSOFT retains **Dec 2025 — Aug 2026** and its existing achievements; the tag is now **AI-assisted development**.
+- NGSOFT retains **Sep 2025 – Sep 2026** and its existing achievements; the tag is now **AI-assisted development**.
 - Contact CTAs use **Let’s talk engineering.**, with recruitment copy covering backend, distributed systems, cloud-native applications, and applied AI.
 - The original resume PDF is unchanged, verified by SHA-256. Web resume content and professional history remain separate from the new experimentation section.
 
