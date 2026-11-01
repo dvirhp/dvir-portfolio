@@ -15,8 +15,8 @@ export const projects: Project[] = [
       "AI-assisted content",
       "Frontend + backend",
     ],
-    demo: "https://possbo-api.onrender.com/dashboard?tab=overview",
-    sourceNote: "Personal Project",
+    github: "https://github.com/dvirhp/possbo",
+    sourceNote: "In Development · Testing",
     sections: [
       {
         id: "overview",
@@ -92,7 +92,7 @@ export const projects: Project[] = [
       {
         id: "preview",
         title: "Screenshots / Product Tour",
-        text: "Real product screenshots from Possbo’s publicly served landing assets. Figures shown are interface examples, not claims about adoption or performance.",
+        text: "Screenshots from Possbo’s development and testing. Figures shown are interface examples, not claims about adoption or performance.",
       },
       {
         id: "stack",
@@ -101,8 +101,8 @@ export const projects: Project[] = [
       },
       {
         id: "live",
-        title: "Live Application",
-        text: "Explore the deployed product. The dashboard requires sign-in.",
+        title: "Project Status",
+        text: "Possbo is an ongoing personal full-stack SaaS project in development and testing. The application is not publicly accessible.",
       },
     ],
     preview: {

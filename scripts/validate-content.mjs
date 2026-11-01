@@ -34,9 +34,11 @@ assert.equal(
 );
 assert.equal(
   projects[0].github,
-  undefined,
-  "Possbo must not expose a repository link",
+  "https://github.com/dvirhp/possbo",
+  "Possbo must link to its public repository",
 );
+assert.equal(projects[0].demo, undefined, "Possbo must not link to a public live app");
+assert.equal(projects[0].sourceNote, "In Development · Testing");
 assert.equal(projects[0].gallery.length, 3);
 for (const image of projects[0].gallery) {
   assert.ok(existsSync(`public/${image.src}`));
@@ -69,13 +71,16 @@ function checkTranslations(value, field = "") {
 }
 checkTranslations(projects);
 const { resume } = load("src/data/resume.ts");
-assert.equal(resume.experience.dates, "Dec 2025 — Aug 2026");
+assert.equal(resume.experience.dates, "Dec 2025 – Sep 2026");
 assert.ok(he[resume.experience.dates]);
+assert.equal(resume.projects[0].title, "Possbo");
+assert.equal(resume.projects[0].stage, "Pre-production");
+checkTranslations(resume.projects);
 const pdf = readFileSync("public/Dvir_Haham_Pour_Resume.pdf");
 assert.equal(
   createHash("sha256").update(pdf).digest("hex"),
-  "0830044ad09424da1dd508e493f388e324a0e189bd35f671c1516460f030ed61",
-  "The original PDF must remain unchanged",
+  "e4ff3b5539ef1b10aabd2f10aa5d829527fd664d2a755bc725f9b99c485622b9",
+  "The owner-supplied updated PDF must remain unchanged",
 );
 const contactSource = readFileSync("src/components/ContactForm.tsx", "utf8");
 assert.ok(contactSource.includes('fetch("/api/contact"'));
@@ -84,6 +89,11 @@ const { learningAreas, ragFlow } = load("src/data/aiEngineering.ts");
 for (const text of [...learningAreas.flat(), ...ragFlow])
   assert.ok(en[text] && he[text], `Missing AI translation: ${text}`);
 const { links } = load("src/data/portfolio.ts");
+assert.equal(links.cv, "/Dvir_Haham_Pour_Resume.pdf");
+assert.ok(
+  (await import("node:fs")).readdirSync("public").includes(links.cv.slice(1)),
+  "The resume filename must match its URL casing on case-sensitive hosts",
+);
 const whatsapp = new URL(links.whatsapp);
 assert.equal(whatsapp.hostname, "wa.me");
 assert.equal(whatsapp.pathname, "/972509507992");

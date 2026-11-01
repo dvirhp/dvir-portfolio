@@ -38,6 +38,21 @@ export function Resume() {
           </ul>
         </section>
         <section>
+          <p className="eyebrow">{tr("Projects")}</p>
+          {resume.projects.map((project) => (
+            <div key={project.title}>
+              <div className="section-heading">
+                <h2>{tr(project.title)}</h2>
+                <span className="mono muted">{tr(project.dates)}</span>
+              </div>
+              <h3>{tr(project.description)} | {tr(project.stage)}</h3>
+              <ul className="challenge-list">
+                {project.items.map((item) => <li key={item}>{tr(item)}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+        <section>
           <h2>{tr("Technical Skills")}</h2>
           <div className="tags">
             {resume.skills.map((item) => (

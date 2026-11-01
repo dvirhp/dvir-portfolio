@@ -25,7 +25,7 @@ export const resume = {
   experience: {
     company: "NGSOFT",
     title: "Software Engineer",
-    dates: "Dec 2025 — Aug 2026",
+    dates: "Dec 2025 – Sep 2026",
     items: [
       "Built end-to-end NestJS systems with PostgreSQL, REST APIs, Socket.IO, and Angular.",
       "Designed shared TypeScript foundations and incremental synchronization with retries.",
@@ -33,6 +33,17 @@ export const resume = {
       "Authored agent context files to support coding standards, reviews, and onboarding.",
     ],
   },
+  projects: [{
+    title: "Possbo",
+    description: "Full-Stack SaaS & AI Platform",
+    stage: "Pre-production",
+    dates: "2026 – Present",
+    items: [
+      "Built a full-stack SaaS platform using React, TypeScript, Node.js, PostgreSQL, and Prisma.",
+      "Implemented scheduling, third-party integrations, and AI-powered content generation.",
+      "Led architecture and implementation using AI-assisted, spec-driven development workflows.",
+    ],
+  }],
   education: {
     institution: "The Open University of Israel",
     degree: "Bachelor of Science (B.Sc.) in Computer Science",
